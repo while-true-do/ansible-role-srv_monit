@@ -1,0 +1,130 @@
+---
+# tasks file for while_true_do.srv_monit
+
+- name: Manage monit Packages
+  package:
+    name: "{{ wtd_srv_monit_package }}"
+    state: "{{ wtd_srv_monit_package_state }}"
+  become: true
+  tags:
+    - monit
+    - package
+
+- name: Manage monit configuration Directory
+  file:
+    path: "/etc/monit.d"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: 0755
+  become: true
+  tags:
+    - monit
+    - configuration
+
+- name: Manage monit var Directory
+  file:
+    path: "/var/monit"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  become: true
+  tags:
+    - monit
+    - configuration
+
+- name: Manage monit pam Configuration
+  template:
+    src: "pam_monit.j2"
+    dest: "/etc/pam.d/monit"
+    owner: "root"
+    group: "root"
+    mode: 0644
+  become: true
+  when:
+    - wtd_srv_monit_package_state != "absent"
+    - wtd_srv_monit_conf.pam | default('true') | bool
+  tags:
+    - monit
+    - configuration
+
+- name: Manage monit Configuration
+  template:
+    src: "monitrc.j2"
+    dest: "/etc/monitrc"
+    owner: "root"
+    group: "root"
+    mode: 0600
+    validate: "/usr/bin/monit -t -c %s"
+  become: true
+  notify:
+    - Restart monit
+  when:
+    - wtd_srv_monit_package_state != "absent"
+  tags:
+    - monit
+    - configuration
+
+- name: Manage monit check System
+  template:
+    src: "check_system.j2"
+    dest: "/etc/monit.d/check-system"
+    owner: "root"
+    group: "root"
+    mode: 0644
+  become: true
+  notify:
+    - Reload monit
+  when:
+    - wtd_srv_monit_conf_check_system.enabled | bool
+  tags:
+    - monit
+    - checks
+    - configuration
+
+- name: Manage monit check Mounts
+  template:
+    src: "check_mounts.j2"
+    dest: "/etc/monit.d/check-mounts"
+    owner: "root"
+    group: "root"
+    mode: 0644
+  become: true
+  notify:
+    - Reload monit
+  when:
+    - wtd_srv_monit_conf_check_mounts.enabled | bool
+  tags:
+    - monit
+    - checks
+    - configuration
+
+- name: Manage monit Service
+  service:
+    name: "{{ wtd_srv_monit_service }}"
+    state: "{{ wtd_srv_monit_service_state }}"
+    enabled: "{{ wtd_srv_monit_service_enabled }}"
+  become: true
+  when:
+    - wtd_srv_monit_package_state != "absent"
+  tags:
+    - monit
+    - service
+
+- name: Manage monit FW Port
+  firewalld:
+    port: "{{ wtd_srv_monit_fw_port }}"
+    state: "{{ wtd_srv_monit_fw_state }}"
+    zone: "{{ wtd_srv_monit_fw_zone }}"
+    immediate: true
+    permanent: true
+  become: true
+  when:
+    - wtd_srv_monit_package_state != "absent"
+    - wtd_srv_monit_conf_web.enabled | bool
+    - wtd_srv_monit_fw_mgmt | bool
+  tags:
+    - monit
+    - security
+    - firewall

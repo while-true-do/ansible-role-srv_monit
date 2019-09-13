@@ -1,0 +1,58 @@
+{{ ansible_managed | comment }}
+
+set daemon {{ wtd_srv_monit_conf.daemon | default('30') }}
+    with start delay {{ wtd_srv_monit_conf.start_delay | default('30') }}
+
+set log {{ wtd_srv_monit_conf.log | default('syslog') }}
+set pidfile {{ wtd_srv_monit_conf.pidfile | default('/var/run/monit.pid') }}
+set idfile {{ wtd_srv_monit_conf.idfile | default('/var/monit/monit.id') }}
+set statefile {{ wtd_srv_monit_conf.statefile | default('/var/monit/monit.state') }}
+
+{%if wtd_srv_monit_conf.eventqueue is defined %}
+# Eventqueue
+
+set eventqueue
+    basedir {{ wtd_srv_monit_conf.eventqueue.basedir | default('/var/monit/events/') }}
+    slots {{ wtd_srv_monit_conf.eventqueue.slots | default('1000')}}
+
+{% endif %}
+{% if wtd_srv_monit_conf.mmonit is defined %}
+# M/Monit
+
+set mmonit {{ wtd_srv_monit_conf.mmonit }}
+{% endif %}
+# Alerts
+
+{% if wtd_srv_monit_conf_alert.recipients is defined %}
+{% for recipient in wtd_srv_monit_conf_alert.recipients %}
+set alert {{ recipient }}
+{% endfor %}
+
+{% endif %}
+{% if wtd_srv_monit_conf_alert.mailserver is defined %}
+set mailserver {{ wtd_srv_monit_conf_alert.mailserver.host }}
+    port {{ wtd_srv_monit_conf_alert.mailserver.port | default('25') }}
+
+{% endif %}
+{% if wtd_srv_monit_conf_web.enabled | bool %}
+# Webserver
+
+set httpd
+    port {{ wtd_srv_monit_conf_web.port | default('2812') }}
+    use address {{ wtd_srv_monit_conf_web.address | default('127.0.0.1') }}
+    signature {{ wtd_srv_monit_conf_web.signature | default('disable') }}
+{% if wtd_srv_monit_conf_web.ssl | default('false') | bool %}
+    with SSL {
+        pemfile: {{ wtd_srv_monit_conf_web.pemfile }}
+    }
+{% endif %}
+{% if wtd_srv_monit_conf_web.allows is defined %}
+{% for allow in wtd_srv_monit_conf_web.allows %}
+    allow {{ allow }}
+{% endfor %}
+{% endif %}
+{% endif %}
+
+# Includes
+
+include /etc/monit.d/*

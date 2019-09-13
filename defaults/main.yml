@@ -1,0 +1,65 @@
+---
+# defaults file for while_true_do.srv_monit
+
+## Package Management
+wtd_srv_monit_package: "monit"
+# State can be present|latest|absent
+wtd_srv_monit_package_state: "present"
+
+## Configuration Management
+wtd_srv_monit_conf: []
+# daemon: 30
+# start_delay: 30
+# log: "syslog"
+# pidfile: "/var/run/monit.pid"
+# idfile: "/var/monit/monit.id"
+# statefile: "/var/monit/monit.state"
+# eventqueue:
+#   basedir: "/var/monit/events/"
+#   slots: "1000"
+# mmonit: ""
+
+wtd_srv_monit_conf_alert: []
+# recipients:
+#   - "mail-address [with reminder on number <cycles>] [{ filter }]"
+# mailserver:
+#   host: "<hostname>|<ip-address>"
+#   port: "25"
+
+wtd_srv_monit_conf_web:
+  enabled: true
+# port: "2812"
+# address: "127.0.0.1"
+# signature: "disable"
+# ssl: false
+# pemfile: "<path to pemfile>"
+# pam: true
+# allows: ""
+#   - "<username>:<password> [read-only]"
+#   - "<fqdn>"
+#   - "<ip-address>"
+#   - "<ip-range>"
+#   - "<@unix-group>"
+
+# Enable checks for system resources
+wtd_srv_monit_conf_check_system:
+  enabled: true
+wtd_srv_monit_conf_check_mounts:
+  enabled: true
+  mounts:
+    - name: "rootfs"
+      mount: "/"
+
+## Service Management
+wtd_srv_monit_service: "monit"
+# State can be started|stopped
+wtd_srv_monit_service_state: "started"
+wtd_srv_monit_service_enabled: true
+
+## Firewalld Management
+wtd_srv_monit_fw_mgmt: true
+wtd_srv_monit_fw_port: "{{ wtd_srv_monit_conf_web.port | default('2812') }}/tcp"
+# State can be enabled|disabled
+wtd_srv_monit_fw_state: "enabled"
+# Zone can be according to defined zones on your machine.
+wtd_srv_monit_fw_zone: "public"

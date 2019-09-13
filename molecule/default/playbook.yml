@@ -1,0 +1,11 @@
+---
+- name: Converge
+  hosts: all
+  roles:
+    - role: while_true_do.srv_monit
+      wtd_srv_monit_fw_mgmt: false
+      wtd_srv_monit_conf_web:
+        enabled: true
+        address: "0.0.0.0"
+        allows:
+          - "admin:admin"

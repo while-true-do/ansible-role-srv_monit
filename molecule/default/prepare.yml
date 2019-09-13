@@ -1,0 +1,5 @@
+---
+- name: Prepare
+  hosts: all
+  roles:
+    - role: while_true_do.rpo_epel

@@ -1,0 +1,20 @@
+---
+# handlers file for while_true_do.srv_monit
+
+- name: Restart monit
+  service:
+    name: "{{ wtd_srv_monit_service }}"
+    state: "restarted"
+  become: true
+  tags:
+    - monit
+    - service
+
+- name: Reload monit
+  service:
+    name: "{{ wtd_srv_monit_service }}"
+    state: "reloaded"
+  become: true
+  tags:
+    - monit
+    - service
